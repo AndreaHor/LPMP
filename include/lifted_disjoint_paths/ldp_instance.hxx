@@ -68,9 +68,14 @@ public:
 		return reachable[i].count(j)>0;
 	}
 
-	const std::unordered_set<size_t>& reachableFromVertex(size_t v)const{
-		return reachable.at(v);
-	}
+//	const std::unordered_set<size_t>& reachableFromVertex(size_t v)const{
+//		return reachable.at(v);
+//	}
+
+    const std::set<size_t>& reachableFromVertex(size_t v)const{
+        return reachable.at(v);
+    }
+
 
 
 
@@ -108,7 +113,7 @@ public:
         return outputFileName;
     }
 
-    const std::vector<std::unordered_set<size_t>>* getPReachable(){
+    const std::vector<std::set<size_t>>* getPReachable(){
         return &reachable;
     }
 
@@ -163,7 +168,7 @@ public:
 
     double evaluateClustering(const std::vector<size_t>& labels) const;
 
-    std::vector<std::unordered_set<size_t>> initReachableLdp(const LdpDirectedGraph &graph, LdpParameters<> &parameters, const VertexGroups<size_t> *vg=nullptr);
+    std::vector<std::set<size_t> > initReachableLdp(const LdpDirectedGraph &graph, LdpParameters<> &parameters, const VertexGroups<size_t> *vg=nullptr);
 
 
 
@@ -259,7 +264,8 @@ private:
 	size_t t_;
 
 	std::vector<double> vertexScore;
-    std::vector<std::unordered_set<size_t>> reachable;
+    //std::vector<std::unordered_set<size_t>> reachable;
+    std::vector<std::set<size_t>> reachable;
 
 
     LdpDirectedGraph myGraph;

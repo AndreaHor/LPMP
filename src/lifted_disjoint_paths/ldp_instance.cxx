@@ -955,13 +955,13 @@ bool LdpInstance::isStrongBase(size_t v,size_t w) const{
 
 
 
-
-std::vector<std::unordered_set<size_t>> LdpInstance::initReachableLdp(const LdpDirectedGraph & graph,LdpParameters<>& parameters,const VertexGroups<size_t>* vg){
+std::vector<std::set<size_t>> LdpInstance::initReachableLdp(const LdpDirectedGraph & graph,LdpParameters<>& parameters,const VertexGroups<size_t>* vg){
+//std::vector<std::unordered_set<size_t>> LdpInstance::initReachableLdp(const LdpDirectedGraph & graph,LdpParameters<>& parameters,const VertexGroups<size_t>* vg){
     parameters.getControlOutput()<<"Run Floyd Warshall"<<std::endl;
     const size_t n=graph.getNumberOfVertices();
 
-
-    std::vector<std::unordered_set<size_t>> desc(n);
+    std::vector<std::set<size_t>> desc(n);
+    //std::vector<std::unordered_set<size_t>> desc(n);
     std::vector<std::vector<std::bitset<10000>>> descBit(n);
     size_t columns=n/10000;
     size_t mod=n%10000;

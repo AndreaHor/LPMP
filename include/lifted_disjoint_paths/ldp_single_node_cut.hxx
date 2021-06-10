@@ -893,7 +893,7 @@ inline double ldp_single_node_cut_factor<LDP_INSTANCE>::LowerBound(bool canChang
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 
         double durationMS=std::chrono::duration_cast<std::chrono::microseconds>(end-begin).count();
-        ldpInstance.increaseLBTime(durationMS);
+        //ldpInstance.increaseLBTime(durationMS);
         return optValue;
     }
     else{
@@ -903,7 +903,7 @@ inline double ldp_single_node_cut_factor<LDP_INSTANCE>::LowerBound(bool canChang
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 
         double durationMS=std::chrono::duration_cast<std::chrono::microseconds>(end-begin).count();
-        ldpInstance.increaseLBTime(durationMS);
+        //ldpInstance.increaseLBTime(durationMS);
 
         return myStr.optValue;
 
@@ -1386,6 +1386,7 @@ inline std::vector<double> ldp_single_node_cut_factor<LDP_INSTANCE>::getAllLifte
 
     //First, compute optimal value
     StrForTopDownUpdate myStr(localBaseCosts,localLiftedCosts);
+    // std::chrono::steady_clock::time_point beginMin=std::chrono::steady_clock::now();
     topDownUpdate(myStr);
     double origOptValue=myStr.optValue;
 
@@ -1393,6 +1394,11 @@ inline std::vector<double> ldp_single_node_cut_factor<LDP_INSTANCE>::getAllLifte
     //All vertices that are not zero in any optimal solution
     //std::list<size_t> isNotZeroInOpt=getOptLiftedFromIndexStr(myStr);
     std::vector<size_t> isNotZeroInOpt=getOptLiftedFromIndexStr(myStr);
+
+    std::chrono::steady_clock::time_point endMin = std::chrono::steady_clock::now();
+
+    double durationMin=std::chrono::duration_cast<std::chrono::microseconds>(endMin-begin).count();
+    ldpInstance.increaseLBTime(durationMin);
     //All vertices that are one in at least one of the optimal solutions
     //std::unordered_set<size_t> isOneInOpt(isNotZeroInOpt.begin(),isNotZeroInOpt.end());
 
