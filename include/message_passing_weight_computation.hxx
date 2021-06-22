@@ -96,7 +96,7 @@ weight_array compute_type_dependent_weights
         FACTOR_ITERATOR factor_begin, FACTOR_ITERATOR factor_end,
         const double leave_percentage)
 {
-    assert(leave_percentage >= 0.0 && leave_percentage < 1.0);
+    assert(leave_percentage >= 0.0 && leave_percentage <= 1.0);
 
     auto omega = allocate_omega(factor_begin, factor_end);
 

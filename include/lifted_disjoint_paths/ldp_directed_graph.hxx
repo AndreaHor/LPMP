@@ -186,6 +186,14 @@ public:
         return backwardEdges;
     }
 
+    size_t getIndexForward(const size_t& firstIndex,const  size_t& secondIndex)const{
+        return forwardEdges.index(firstIndex,secondIndex);
+    }
+
+    size_t getIndexBackward(const size_t& firstIndex,const  size_t& secondIndex)const{
+        return backwardEdges.index(firstIndex,secondIndex);
+    }
+
 
 private:
     //two_dim_variable_array<std::pair<size_t,double>> forwardEdges;
