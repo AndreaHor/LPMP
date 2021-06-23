@@ -1006,13 +1006,14 @@ std::vector<std::set<size_t>> LdpInstance::initReachableLdp(const LdpDirectedGra
         }
     }
     else{
+        size_t maxTimeGap=std::max(parameters.getMaxTimeBase(),parameters.getMaxTimeLifted());
         for (size_t k1 = 0; k1 <columns; ++k1) {
             for (size_t k2 = 0; k2 < 10000; ++k2) {
                 if(k1*10000+k2<n){
                     size_t maxTime=vg->getGroupIndex(k1*10000+k2);
                     size_t minTime=0;
-                    if(maxTime>parameters.getMaxTimeGapComplete()){
-                        minTime=maxTime-parameters.getMaxTimeGapComplete();
+                    if(maxTime>maxTimeGap){
+                        minTime=maxTime-maxTimeGap;
                     }
 
                     for (size_t t = minTime; t < maxTime; ++t) {//TODO use time gap
