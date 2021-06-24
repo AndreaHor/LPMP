@@ -32,19 +32,19 @@ public:
         pInstance=pLdpInstance;
     }
 
-    size_t getIndexInYLifted(size_t centralNodeID){
+    size_t getIndexInYLifted(size_t centralNodeID)const{
         assert(centralNodeID<numberOfNodes);
         size_t index=centralNodeID*(maxTimeGap+1)+1;
         return index;
     }
 
-    size_t getIndexInYBase(size_t centralNodeID){
-        size_t index=centralNodeID*(maxTimeGap+1)+1;
+    size_t getIndexInYBase(size_t centralNodeID) const{
+        size_t index=centralNodeID*(maxTimeGap+1);
         return index;
     }
 
     //Can be called just to get the index of the first neighbor and then iterate without calling this function always
-    size_t getIndexInWILifted(size_t centralNodeID,size_t neighborIndex){
+    size_t getIndexInWILifted(size_t centralNodeID,size_t neighborIndex)const{
         size_t index=0;
         if(isOutFlow){
             index=pInstance->getMyGraphLifted().getIndexForward(centralNodeID,neighborIndex);
@@ -56,7 +56,7 @@ public:
     }
 
     //Can be called just to get the index of the first neighbor and then iterate without calling this function always
-    size_t getIndexInWIBase(size_t centralNodeID,size_t neighborIndex){
+    size_t getIndexInWIBase(size_t centralNodeID,size_t neighborIndex)const{
         size_t index=0;
         if(isOutFlow){
             index=pInstance->getMyGraph().getIndexForward(centralNodeID,neighborIndex);
@@ -72,8 +72,8 @@ public:
     }
 
 
-    size_t getIndexWIYBase(size_t centralNodeID,size_t neighborIndex){
-        //TODO implement
+    size_t getYLength()const{
+        return yLength;
     }
 
     LdpProblem(const lifted_disjoint_paths::LdpInstance* _pInstance,bool _isOutFlow)
@@ -85,6 +85,7 @@ public:
         isOutFlow=_isOutFlow;
         maxTimeGap=pInstance->parameters.getMaxTimeLifted();
         yLength=numberOfNodes*(maxTimeGap+1);
+        xLength=numberOfNodes+pInstance->getMyGraph().getNumberOfEdges()+pInstance->getMyGraphLifted().getNumberOfEdges();
 
         nodeIDToIndex=std::vector<std::map<size_t,size_t>>(numberOfNodes);
         if(isOutFlow){
@@ -151,7 +152,7 @@ public:
         }
     }
 
-    OptimalSolution topDownMethod(size_t centralNodeID,const std::vector<double>& wi){
+    double topDownMethod(size_t centralNodeID,double* wi,size_t* y){
     //TODO: top down method here
 
         const LdpDirectedGraph& baseGraph=pInstance->getMyGraph();
@@ -169,7 +170,7 @@ public:
                 numberOfLiftedNeighbors=liftedGraph.getNumberOfEdgesFromVertex(centralNodeID);
                 size_t counter=0;
                 for (auto it=liftedGraph.forwardNeighborsBegin(centralNodeID);it!=liftedGraph.forwardNeighborsEnd(centralNodeID);it++) {
-                    pInstance->sncTDStructure[it->first]=it->second+wi.at(getIndexInWILifted(centralNodeID,counter));
+                    pInstance->sncTDStructure[it->first]=it->second+wi[getIndexInWILifted(centralNodeID,counter)];
                     counter++;
                 }
             }
@@ -177,7 +178,7 @@ public:
                 numberOfLiftedNeighbors=liftedGraph.getNumberOfEdgesToVertex(centralNodeID);
                 size_t counter=0;
                 for (auto it=liftedGraph.backwardNeighborsBegin(centralNodeID);it!=liftedGraph.backwardNeighborsEnd(centralNodeID);it++) {
-                    pInstance->sncTDStructure[it->first]=it->second+wi.at(getIndexInWILifted(centralNodeID,counter));
+                    pInstance->sncTDStructure[it->first]=it->second+wi[getIndexInWILifted(centralNodeID,counter)];
                     counter++;
                 }
             }
@@ -353,14 +354,82 @@ public:
         optSolution.baseEdgeIndex=bestSolutionIndex;
         optSolution.liftedEdgesIndices=optLiftedIndices;
 
-        return optSolution;
+        size_t yIndex=getIndexInYBase(centralNodeID);
+        y[yIndex]=bestSolutionIndex;
 
+        size_t j = 0;
+        for (; j < optLiftedIndices.size(); ++j) {
+            size_t liftedIndex=optLiftedIndices[j];
+            y[yIndex+j+1]=liftedIndex;
+
+        }
+        for(;j<maxTimeGap;j++){
+            y[yIndex+j+1]=numberOfNodes;
+        }
+
+        return bestSolutionValue;
 //        myStr.optBaseIndex=bestSolutionIndex;
 //        myStr.optValue=bestSolutionValue;
 
 
     }
 
+
+
+    void copyYToX(double* x,size_t* y) const{
+        const LdpDirectedGraph& baseGraph=pInstance->getMyGraph();
+        const LdpDirectedGraph& liftedGraph=pInstance->getMyGraphLifted();
+        for (size_t i = 0; i < numberOfNodes; ++i) {
+            size_t indexInY=getIndexInYBase(i);
+            size_t baseEdgeIndex=y[indexInY];
+            size_t numberOfBase=baseGraph.getNumberOfEdgesFromVertex(i);
+            if(!isOutFlow) numberOfBase=baseGraph.getNumberOfEdgesToVertex(i);
+            size_t firstBaseIndex=getIndexInWIBase(i,0);
+            size_t firstILiftedndexInX=getIndexInWILifted(i,0);
+            size_t numberOfLifted=liftedGraph.getNumberOfEdgesFromVertex(i);
+            if(!isOutFlow) numberOfLifted=liftedGraph.getNumberOfEdgesToVertex(i);
+            if(baseEdgeIndex==numberOfBase){//inactive node
+                x[i]=0;
+                for (size_t j = 0; j < numberOfBase; ++j) {
+                    x[firstBaseIndex+j]=0;
+                }
+                for (size_t j = 0; j < numberOfLifted; ++j) {
+                    x[firstILiftedndexInX+j]=0;
+                }
+            }
+            else{
+                x[i]=1;
+                for (size_t j = 0; j < numberOfBaseEdges; ++j) {
+                    if(j!=baseEdgeIndex){
+                        x[firstBaseIndex+j]=0;
+                    }
+                    else{
+                        x[firstBaseIndex+j]=1;
+                    }
+                }
+                size_t indexInY=getIndexInYLifted(i);
+                size_t firstIndexInX=getIndexInWILifted(i,0);
+                size_t nextOptLiftedIndex=y[indexInY];
+                for (size_t j = 0; j < numberOfLifted; ++j) {
+                    if(j==nextOptLiftedIndex){
+                        x[firstIndexInX+j]=1;
+                        indexInY++;
+                        if(indexInY<maxTimeGap) nextOptLiftedIndex=y[indexInY];
+                        else nextOptLiftedIndex=numberOfNodes;
+                    }
+                    else{
+                        x[firstIndexInX+j]=0;
+                    }
+
+                }
+
+            }
+        }
+
+
+
+
+    }
 
 
 
@@ -384,31 +453,32 @@ private:
     std::vector<std::map<size_t,size_t>> nodeIDToIndex;
     size_t maxTimeGap;
     size_t yLength;
+    size_t xLength;
     std::vector<std::vector<size_t>> traverseOrders; //Obtained from reachability structure
 
 };
 
-double MinInOutFlow(double* wi, FWMAP::YPtr _y, FWMAP::TermData term_data) // maximization oracle. Must copy argmax_y <a^{iy},[PAD(wi) kappa]> to y, and return the free term a^{iy}[d].
+double minInOutFlow(double* wi, FWMAP::YPtr _y, FWMAP::TermData term_data) // maximization oracle. Must copy argmax_y <a^{iy},[PAD(wi) kappa]> to y, and return the free term a^{iy}[d].
 {
-  sub_problem_test* sp = (sub_problem_test*) term_data;
+  LdpProblem* ldpProblem = (LdpProblem*) term_data;
   size_t* y = (size_t*) _y;
+  memset(y, 0, ldpProblem->getYLength()*sizeof(char));
+  double optValue=0;
+  for (size_t i = 0; i < ldpProblem->getNumberOfNodes(); ++i) {
+      optValue+=ldpProblem->topDownMethod(i,wi,y);
 
-  if(wi[0] + sp->cost[0] < wi[1] + sp->cost[1]) {
-    *y = 0;
-  } else {
-    *y = 1;
   }
-  //std::cout << "compute solution on " << sp << " = " << *y << " with w = (" << wi[0] << "," << wi[1] << ")\n";
-  return sp->cost[*y];
+
+
+  return optValue;
 }
 
-static void copy_fn_test(double* ai, FWMAP::YPtr _y, FWMAP::TermData term_data)
+static void copyYtoX(double* xi, FWMAP::YPtr _y, FWMAP::TermData term_data)
 {
-  sub_problem_test* sp = (sub_problem_test*) term_data;
-  size_t* y = (size_t*) _y;
-  assert(*y == 0 || *y == 1);
-  ai[1-*y] = 0.0;
-  ai[*y] = 1.0;
+    LdpProblem* ldpProblem = (LdpProblem*) term_data;
+    size_t* y = (size_t*) _y;
+
+    ldpProblem->copyYToX(xi,y);
 }
 
 static double dot_product_fn_test(double* wi, FWMAP::YPtr _y, FWMAP::TermData term_data)
