@@ -27,15 +27,18 @@ target_link_libraries(ldp_batch_process LPMP pybind11::module)
 add_library(ldp_fw ldp_fw.cxx)
 target_link_libraries(ldp_fw LPMP pybind11::module)
 
+
 #add_library(lifted_disjoint_paths_input lifted_disjoint_paths_input.cpp)
 #target_link_libraries(lifted_disjoint_paths_input LPMP ldp_instance pybind11::module)
 
 add_executable(lifted_disjoint_paths_text_input  lifted_disjoint_paths_text_input.cpp)
-
-#add_executable(lifted_disjoint_paths_fw ldp_fw_solve.cpp)
-
 target_link_libraries(lifted_disjoint_paths_text_input ldp_instance ldp_paths_extractor ldp_interval_connection ldp_cut_factor ldp_path_factor ldp_directed_graph ldp_batch_process LPMP pybind11::module)
-#target_link_libraries(lifted_disjoint_paths_fw ldp_instance ldp_interval_connection ldp_directed_graph ldp_batch_process ldp_fw LPMP pybind11::module)
+
+
+add_executable(lifted_disjoint_paths_fw ldp_fw_solve.cpp)
+target_link_libraries(lifted_disjoint_paths_fw ldp_instance ldp_interval_connection ldp_directed_graph ldp_batch_process ldp_fw LPMP FW-MAP pybind11::module)
+
+
 
 pybind11_add_module(ldpMessagePassingPy ldp_python.cxx)
 

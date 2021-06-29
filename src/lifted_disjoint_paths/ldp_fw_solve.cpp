@@ -1,20 +1,23 @@
 #include"lifted_disjoint_paths/ldp_fw.hxx"
 #include "tclap/CmdLine.h"
-
+#include <sstream>
 #include "FW-MAP.h"
 
-namespace LPMP{
+using namespace LPMP;
 
 int main(int argc, char** argv)
 {
 
 
+    std::cout<<"start"<<std::endl;
+    std::cout<<"start 2"<<std::endl;
 
     TCLAP::CmdLine cmd_(std::string("Command line options for LDP FW"), ' ', "0.0.1");
-    cmd_.parse(argc,argv);
+
     TCLAP::ValueArg<std::string> inputFileArg_("i","inputFile","file from which to read problem instance",true,"","file name",cmd_);
     TCLAP::ValueArg<std::string> outputFileArg_("o","outputFile","file to save result",true,"","file name",cmd_);
 
+    cmd_.parse(argc,argv);
     std::string inputFileName = inputFileArg_.getValue();
     std::string outputFileName = outputFileArg_.getValue();
 
@@ -38,7 +41,7 @@ int main(int argc, char** argv)
 
     FWMAP s (2, 2, minInOutFlowLDP, copyYtoXLDP, dotProductLDP);//int d, int n, MaxFn max_fn, CopyFn copy_fn, DotProductFn dot_product_fn;
 
-
+//TODO mapping!
   std::array<int,2> mapping = {0,1}; //TODO map in variables to out variables
 
   //mapping should map variables of problem In to variables of problem Out
@@ -66,4 +69,4 @@ int main(int argc, char** argv)
   return 0;
 }
 
-}
+
