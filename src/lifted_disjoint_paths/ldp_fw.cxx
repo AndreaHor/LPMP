@@ -236,8 +236,7 @@ double LdpProblem::topDownMethod(size_t centralNodeID,double* wi,size_t* y){
         numberOfLiftedNeighbors=liftedGraph.getNumberOfEdgesFromVertex(centralNodeID);
         size_t counter=0;
         for (auto it=liftedGraph.forwardNeighborsBegin(centralNodeID);it!=liftedGraph.forwardNeighborsEnd(centralNodeID);it++) {
-            double origCost=it->second;
-            if(it->first<numberOfNodes) origCost*=0.5;
+            double origCost=it->second*0.5;
             pInstance->sncTDStructure[it->first]=origCost+wi[firstIndexInWiLifted+counter];
             counter++;
         }
@@ -246,8 +245,7 @@ double LdpProblem::topDownMethod(size_t centralNodeID,double* wi,size_t* y){
         numberOfLiftedNeighbors=liftedGraph.getNumberOfEdgesToVertex(centralNodeID);
         size_t counter=0;
         for (auto it=liftedGraph.backwardNeighborsBegin(centralNodeID);it!=liftedGraph.backwardNeighborsEnd(centralNodeID);it++) {
-            double origCost=it->second;
-            if(it->first<numberOfNodes) origCost*=0.5;
+            double origCost=it->second*0.5;
             pInstance->sncTDStructure[it->first]=origCost+wi[firstIndexInWiLifted+counter];
             counter++;
         }
@@ -378,30 +376,31 @@ double LdpProblem::topDownMethod(size_t centralNodeID,double* wi,size_t* y){
     size_t bestSolutionIndex=nodeNotActive;
     size_t bestSolutionID=std::numeric_limits<size_t>::max();
 
-    //TODO:check from here down
+    double nodeCost=pInstance->getVertexScore(centralNodeID)+wi[getIndexInWINode(centralNodeID)];
     std::vector<double> solutionCosts(nodeNotActive+1);
     solutionCosts[nodeNotActive]=0;
     size_t counter=0;
+    size_t firstBaseIndexInW=getIndexInWIBase(centralNodeID);
     for (; baseNeighborsIt!=baseNeighborsEnd; baseNeighborsIt++) {
 
         double baseCost=baseNeighborsIt->second;
-        size_t index=getIndexInWIBase(centralNodeID)+counter;
-        baseCost+=wi[index];
-
         size_t neighborID=baseNeighborsIt->first;
+        if(neighborID<numberOfNodes) baseCost*=0.5;
+        size_t index=firstBaseIndexInW+counter;
+        baseCost+=wi[index];
 
 
         double valueToAdd=0;
         if(neighborID<numberOfNodes){
             valueToAdd=pInstance->sncTDStructure[neighborID];
         }
-        double nodeCost=pInstance->getVertexScore(neighborID);
+
         double value=baseCost+nodeCost+valueToAdd;
 
         solutionCosts[counter]=value;
         if(value<bestSolutionValue){
             bestSolutionValue=value;
-            bestSolutionIndex=i;
+            bestSolutionIndex=counter;
             bestSolutionID=neighborID;
         }
 
@@ -427,6 +426,7 @@ double LdpProblem::topDownMethod(size_t centralNodeID,double* wi,size_t* y){
     size_t yIndex=getIndexInYBase(centralNodeID);
     y[yIndex]=bestSolutionIndex;
 
+    assert(optLiftedIndices.size()<maxTimeGap);
     size_t j = 0;
     for (; j < optLiftedIndices.size(); ++j) {
         size_t liftedIndex=optLiftedIndices[j];
