@@ -39,14 +39,18 @@ int main(int argc, char** argv)
     LdpProblem ldpProblemOut(&ldpInstance,true);
     LdpProblem ldpProblemIn(&ldpInstance,false);
 
+    std::vector<int> mapping(ldpProblemOut.getXLength());
+    ldpProblemIn.initVectorForMapping(mapping);
+    int* mappingData=mapping.data();
+
     FWMAP s (2, 2, minInOutFlowLDP, copyYtoXLDP, dotProductLDP);//int d, int n, MaxFn max_fn, CopyFn copy_fn, DotProductFn dot_product_fn;
 
 //TODO mapping!
-  std::array<int,2> mapping = {0,1}; //TODO map in variables to out variables
+  //std::array<int,2> mapping = {0,1}; //TODO map in variables to out variables
 
   //mapping should map variables of problem In to variables of problem Out
   //TODO: check the sizes of x and y of both problems, they should be the same.
-  s.SetTerm(0, &ldpProblemIn, ldpProblemIn.getXLength(), &mapping[0], ldpProblemIn.getYLength()*sizeof(size_t));
+  s.SetTerm(0, &ldpProblemIn, ldpProblemIn.getXLength(), mappingData, ldpProblemIn.getYLength()*sizeof(size_t));
   s.SetTerm(1, &ldpProblemOut, ldpProblemOut.getXLength(), NULL, ldpProblemOut.getYLength()*sizeof(size_t));
 
   s.init();

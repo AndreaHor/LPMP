@@ -37,6 +37,9 @@ public:
 
     double topDownMethod(size_t centralNodeID,double* wi,size_t* y);
 
+    void initVectorForMapping(std::vector<int>& vectorForMapping );
+
+
 private:
     size_t getVertexToReach()const{
         if(isOutFlow) return numberOfNodes+1;
@@ -57,6 +60,8 @@ private:
 
 
     size_t nodeIDtoNeighborIndex(const size_t& centralNodeID, const size_t& neighborID);
+
+
 
 
 

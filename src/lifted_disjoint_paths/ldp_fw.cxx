@@ -445,7 +445,46 @@ double LdpProblem::topDownMethod(size_t centralNodeID,double* wi,size_t* y){
 }
 
 
+void LdpProblem::initVectorForMapping(std::vector<int>& vectorForMapping ){
+    assert(vectorForMapping.size()==xLength);
+    const LdpDirectedGraph& baseGraph=pInstance->getMyGraph();
+    const LdpDirectedGraph& liftedGraph=pInstance->getMyGraphLifted();
+    for(size_t i=0;i<numberOfNodes;i++){
+        vectorForMapping[i]=int(i);
+    }
+    size_t counter=numberOfNodes;
+    for(size_t i=0;i<numberOfNodes;i++){
+        auto it=baseGraph.backwardNeighborsBegin(i);
+        for(;it!=baseGraph.backwardNeighborsEnd(i);it++){
+            size_t secondNode=it->first;
+            size_t reverseNeighborIndex=it->reverse_neighbor_index;
+            int index=int(baseGraph.getIndexForward(secondNode,0));
+            index+=reverseNeighborIndex;
+            assert(size_t(index)==baseGraph.getIndexForward(secondNode,reverseNeighborIndex));
+            vectorForMapping[counter]=index;
+            counter++;
+        }
+    }
 
+    assert(counter==numberOfNodes+numberOfBaseEdges);
+    for(size_t i=0;i<numberOfNodes;i++){
+        auto it=liftedGraph.backwardNeighborsBegin(i);
+        for(;it!=liftedGraph.backwardNeighborsEnd(i);it++){
+            size_t secondNode=it->first;
+            size_t reverseNeighborIndex=it->reverse_neighbor_index;
+            int index=int(liftedGraph.getIndexForward(secondNode,0));
+            index+=reverseNeighborIndex;
+            assert(size_t(index)==liftedGraph.getIndexForward(secondNode,reverseNeighborIndex));
+            assert(counter<xLength);
+            assert(size_t(index)<xLength);
+            vectorForMapping[counter]=index;
+            counter++;
+        }
+    }
+    assert(counter=numberOfNodes+numberOfBaseEdges+numberOfLiftedEdges);
+
+
+}
 
 
 
@@ -453,7 +492,7 @@ double minInOutFlowLDP(double* wi, FWMAP::YPtr _y, FWMAP::TermData term_data) //
 {
   LdpProblem* ldpProblem = (LdpProblem*) term_data;
   size_t* y = (size_t*) _y;
-  memset(y, 0, ldpProblem->getYLength()*sizeof(char));
+  memset(y, 0, ldpProblem->getYLength()*sizeof(size_t));
   double optValue=0;
   for (size_t i = 0; i < ldpProblem->getNumberOfNodes(); ++i) {
       optValue+=ldpProblem->topDownMethod(i,wi,y);
