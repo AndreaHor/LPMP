@@ -1004,6 +1004,21 @@ std::vector<std::set<size_t>> LdpInstance::initReachableLdp(const LdpDirectedGra
             }
 
         }
+
+        for (size_t i = 0; i < n; ++i) {
+            for (size_t k1 = 0; k1 <columns; ++k1) {
+                for (size_t k2 = 0; k2 < 10000; ++k2) {
+                    size_t element=k1*10000+k2;
+                    if(element<n&&descBit[i][k1][k2]){
+//                        if(i==4496){
+//                            std::cout<<"inserting element "<<element<<std::endl;
+//                        }
+                        desc[i].insert(element);
+                    }
+                }
+            }
+
+        }
     }
     else{
         size_t maxTimeGap=std::max(parameters.getMaxTimeBase(),parameters.getMaxTimeLifted());
@@ -1018,11 +1033,22 @@ std::vector<std::set<size_t>> LdpInstance::initReachableLdp(const LdpDirectedGra
 
                     for (size_t t = minTime; t < maxTime; ++t) {//TODO use time gap
                         const std::vector<size_t>& vertices=vg->getGroupVertices(t);
+                        //                        if(k1*10000+k2==5273){
+                        ////                            for (size_t var = 0; var < 10000; ++var) {
+                        ////                                std::cout<<var<<":"<<descBit[5273][0][var]<<","<<std::endl;
+                        ////                            }
+                        //                        }
                         for (size_t i:vertices) {
                             assert(i<descBit.size());
                             if(descBit[i][k1][k2]){
                                 for (size_t j = 0; j < columns; ++j) {
                                     descBit[i][j]|=descBit[k1*10000+k2][j];
+//                                    if(i==4496){
+//                                        std::cout<<"neighbors from "<<(k1*10000+k2)<<", values "<<descBit[4496][0][5273]<< std::endl;
+//                                        //                                        for (size_t var = 0; var < 10000; ++var) {
+//                                        //                                            std::cout<<var<<":"<<descBit[4496][0][5273]<<","<<std::endl;
+//                                        //                                        }
+//                                    }
                                 }
 
                             }
@@ -1036,19 +1062,25 @@ std::vector<std::set<size_t>> LdpInstance::initReachableLdp(const LdpDirectedGra
 
         }
 
-    }
 
-    for (size_t i = 0; i < n; ++i) {
-        for (size_t k1 = 0; k1 <columns; ++k1) {
-            for (size_t k2 = 0; k2 < 10000; ++k2) {
-                if(k1*10000+k2<n&&descBit[i][k1][k2]){
-                    desc[i].insert(k1*10000+k2);
+
+        for (size_t i = 0; i < n; ++i) {
+            size_t timeI=vg->getGroupIndex(i);
+            for (size_t k1 = 0; k1 <columns; ++k1) {
+                for (size_t k2 = 0; k2 < 10000; ++k2) {
+                    size_t element=k1*10000+k2;
+                    if(element<n&&descBit[i][k1][k2]){
+                        size_t timeElement=vg->getGroupIndex(element);
+                        assert(timeElement>=timeI);
+                        if(timeElement-timeI<=maxTimeGap){
+                            desc[i].insert(element);
+                        }
+                    }
                 }
             }
+
         }
-
     }
-
     size_t reachableMustCut=0;
     if(parameters.isMustCutMissing()){
         for (size_t i = 0; i < canJoinStructure.size(); ++i) {

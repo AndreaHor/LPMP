@@ -329,6 +329,11 @@ public:
        return std::distance(&data_[0], &(*this)(first_index, second_index)); 
    }
 
+   std::size_t getOffsetValue(size_t firstIndex) const{
+       assert(firstIndex< size());
+       return offsets_[firstIndex];
+   }
+
 private:
    template<typename ITERATOR>
        std::size_t set_dimensions(ITERATOR begin, ITERATOR end)

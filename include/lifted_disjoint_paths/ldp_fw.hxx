@@ -20,7 +20,7 @@ public:
     double dotProduct(double* wi,size_t* y) const;
 
     size_t getNumberOfNodes() const{
-        return numberOfNodes;
+        return numberOfInnerNodes;
     }
 
     bool getIsOutFlow()const{
@@ -42,8 +42,8 @@ public:
 
 private:
     size_t getVertexToReach()const{
-        if(isOutFlow) return numberOfNodes+1;
-        else return numberOfNodes;
+        if(isOutFlow) return numberOfInnerNodes+1;
+        else return numberOfInnerNodes;
     }
 
     size_t getIndexInYLifted(size_t centralNodeID)const;
@@ -66,9 +66,10 @@ private:
 
 
     const lifted_disjoint_paths::LdpInstance* pInstance;
-    size_t numberOfNodes; //without s and t
+    size_t numberOfInnerNodes; //without s and t
+    size_t numberOfAllNodes;
     size_t numberOfLiftedEdges;
-    size_t numberOfBaseEdges;
+    size_t numberOfLocalBaseEdges;
     bool isOutFlow;
     std::vector<std::map<size_t,size_t>> nodeIDToIndex;
     size_t maxTimeGap;
