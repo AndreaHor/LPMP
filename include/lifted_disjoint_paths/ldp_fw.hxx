@@ -7,6 +7,7 @@
 #include <array>
 #include <iostream>
 #include <cmath>
+#include <vector>
 #include "ldp_instance.hxx"
 
 namespace LPMP{
@@ -38,6 +39,7 @@ public:
     double topDownMethod(size_t centralNodeID,double* wi,size_t* y);
 
     void initVectorForMapping(std::vector<int>& vectorForMapping );
+     bool debugOutputs=false;
 
 
 private:
@@ -77,6 +79,7 @@ private:
     size_t xLength;
     std::vector<std::vector<size_t>> traverseOrders; //Obtained from reachability structure
 
+
 };
 
 double minInOutFlowLDP(double* wi, FWMAP::YPtr _y, FWMAP::TermData term_data);
@@ -94,7 +97,9 @@ static double dotProductLDP(double* wi, FWMAP::YPtr _y, FWMAP::TermData term_dat
     LdpProblem* ldpProblem = (LdpProblem*) term_data;
     size_t* y = (size_t*) _y;
 
+    // std::vector<double> zeroLambda(ldpProblem->getXLength());
     double dp=ldpProblem->dotProduct(wi,y);
+     //double dp=ldpProblem->dotProduct(zeroLambda.data(),y);
      return dp;
 }
 

@@ -61,21 +61,23 @@ int main(int argc, char** argv)
 
   s.init();
   double cost=0;
-  for(size_t i=0; i<100; ++i) {
+  for(size_t i=0; i<50; ++i) {
     cost = s.do_descent_step();
+    std::cout<<std::endl;
+    std::cout<<"cost in "<<i<<"th step "<<cost<<std::endl;
   }
   //double cost = s.Solve();
 
   double* lambda1 = s.GetLambda(0);
   double* lambda2 = s.GetLambda(1);
 
-  std::cout << "\n\nsolution = ";
-  for(int i=0; i<2; ++i) { std::cout << lambda1[i] << ","; }
-  std::cout << "\n";
-  for(int i=0; i<2; ++i) { std::cout << lambda2[i] << ","; }
-  std::cout << "\n";
+//  std::cout << "\n\nsolution = ";
+//  for(int i=0; i<ldpProblemIn.getXLength(); ++i) { std::cout << lambda1[i] << ","; }
+//  std::cout << "\n";
+//  for(int i=0; i<ldpProblemOut.getXLength(); ++i) { std::cout << lambda2[i] << ","; }
+//  std::cout << "\n";
 
-  assert(std::abs(cost - 10.0) < 10e-6);
+  //assert(std::abs(cost - 10.0) < 10e-6);
   return 0;
 }
 

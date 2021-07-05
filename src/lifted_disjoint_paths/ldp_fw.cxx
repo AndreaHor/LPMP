@@ -82,17 +82,32 @@ size_t LdpProblem::getIndexInYBase(size_t centralNodeID) const{
 }
 
 //Can be called just to get the index of the first neighbor and then iterate without calling this function always
+//If no lifted neighbors, returns xLength
 size_t LdpProblem::getIndexInWILifted(size_t centralNodeID)const{
     size_t index=0;
+    size_t toAdd=numberOfInnerNodes+numberOfLocalBaseEdges;
     if(isOutFlow){
         //index=pInstance->getMyGraphLifted().getIndexForward(centralNodeID,0);
-        index=pInstance->getMyGraph().getOffsetForward(centralNodeID);
+        if(pInstance->getMyGraphLifted().getNumberOfEdgesFromVertex(centralNodeID)==0){
+            return xLength;
+        }
+        else{
+            index=pInstance->getMyGraphLifted().getOffsetForward(centralNodeID);
+            return index+toAdd;
+        }
+
     }
     else{
+        if(pInstance->getMyGraphLifted().getNumberOfEdgesToVertex(centralNodeID)==0){
+            return xLength;
+        }
+        else{
         //index=pInstance->getMyGraphLifted().getIndexBackward(centralNodeID,0);
-        index=pInstance->getMyGraph().getOffsetBackward(centralNodeID);
+            index=pInstance->getMyGraphLifted().getOffsetBackward(centralNodeID);
+            return index+toAdd;
+        }
     }
-    return index+numberOfInnerNodes+numberOfLocalBaseEdges;
+
 }
 
 //Can be called just to get the index of the first neighbor and then iterate without calling this function always
@@ -139,24 +154,30 @@ double LdpProblem::dotProduct(double* wi,size_t* y) const{
         size_t numberOfLifted=liftedGraph.getNumberOfEdgesFromVertex(i);
         if(!isOutFlow) numberOfLifted=liftedGraph.getNumberOfEdgesToVertex(i);
         if(baseEdgeIndex<numberOfBase){//active node
-            product+=pInstance->getVertexScore(i);
+
+            product+=wi[i];
             assert(firstBaseIndexInX+baseEdgeIndex<xLength);
+
             product+=wi[firstBaseIndexInX+baseEdgeIndex];
 
-            size_t indexInYLifted=getIndexInYLifted(i);
-            size_t optLiftedCounter=0;
-           // size_t firstIndexInX=getIndexInWILifted(i);
-            size_t nextOptLiftedIndex=y[indexInYLifted+optLiftedCounter];
-            while(nextOptLiftedIndex<numberOfInnerNodes){
-                assert(firstLiftedIndexInX+nextOptLiftedIndex<xLength);
-                product+=wi[firstLiftedIndexInX+nextOptLiftedIndex];
-                optLiftedCounter++;
+            if(firstBaseIndexInX<xLength){
 
-                if(optLiftedCounter<maxTimeGap){
-                    nextOptLiftedIndex=y[indexInYLifted+optLiftedCounter];
+                size_t indexInYLifted=getIndexInYLifted(i);
+                size_t optLiftedCounter=0;
+                // size_t firstIndexInX=getIndexInWILifted(i);
+                size_t nextOptLiftedIndex=y[indexInYLifted+optLiftedCounter];
+                while(nextOptLiftedIndex<numberOfInnerNodes){
+                    assert(firstLiftedIndexInX+nextOptLiftedIndex<xLength);
+
+                    product+=wi[firstLiftedIndexInX+nextOptLiftedIndex];
+                    optLiftedCounter++;
+
+                    if(optLiftedCounter<maxTimeGap){
+                        nextOptLiftedIndex=y[indexInYLifted+optLiftedCounter];
+                    }
+                    else break;
+
                 }
-                else break;
-
             }
         }
     }
@@ -178,11 +199,13 @@ void LdpProblem::copyYToXi(double* x,size_t* y) const{
         size_t firsILiftedIndexInX=getIndexInWILifted(i);
         size_t numberOfLifted=liftedGraph.getNumberOfEdgesFromVertex(i);
         if(!isOutFlow) numberOfLifted=liftedGraph.getNumberOfEdgesToVertex(i);
+         assert(firsILiftedIndexInX<xLength||numberOfLifted==0);
         if(activeBaseEdgeIndex==numberOfBase){//inactive node
             x[i]=0;
             for (size_t j = 0; j < numberOfBase; ++j) {
                 x[firstBaseIndexInX+j]=0;
             }
+
             for (size_t j = 0; j < numberOfLifted; ++j) {
                 x[firsILiftedIndexInX+j]=0;
             }
@@ -222,7 +245,7 @@ void LdpProblem::copyYToXi(double* x,size_t* y) const{
 
 
 double LdpProblem::topDownMethod(size_t centralNodeID,double* wi,size_t* y){
-    //TODO: Fix extraction of edge cost from instance. They must be divided by 2 unless they are edges from s or to t!
+
 
     const LdpDirectedGraph& baseGraph=pInstance->getMyGraph();
     const LdpDirectedGraph& liftedGraph=pInstance->getMyGraphLifted();
@@ -242,8 +265,11 @@ double LdpProblem::topDownMethod(size_t centralNodeID,double* wi,size_t* y){
 
     if(isOutFlow){  //Prefill sncTDStrucute with lifted edges costs
         numberOfLiftedNeighbors=liftedGraph.getNumberOfEdgesFromVertex(centralNodeID);
+        auto it=liftedGraph.forwardNeighborsBegin(centralNodeID);
+        auto end=liftedGraph.forwardNeighborsEnd(centralNodeID);
+        assert(firstIndexInWiLifted<xLength||it==end);
         size_t counter=0;
-        for (auto it=liftedGraph.forwardNeighborsBegin(centralNodeID);it!=liftedGraph.forwardNeighborsEnd(centralNodeID);it++) {
+        for (;it!=end;it++) {
             double origCost=it->second*0.5;
             pInstance->sncTDStructure[it->first]=origCost+wi[firstIndexInWiLifted+counter];
             counter++;
@@ -252,7 +278,10 @@ double LdpProblem::topDownMethod(size_t centralNodeID,double* wi,size_t* y){
     else{
         numberOfLiftedNeighbors=liftedGraph.getNumberOfEdgesToVertex(centralNodeID);
         size_t counter=0;
-        for (auto it=liftedGraph.backwardNeighborsBegin(centralNodeID);it!=liftedGraph.backwardNeighborsEnd(centralNodeID);it++) {
+        auto it=liftedGraph.backwardNeighborsBegin(centralNodeID);
+        auto end=liftedGraph.backwardNeighborsEnd(centralNodeID);
+        assert(firstIndexInWiLifted<xLength||it==end);
+        for (;it!=end;it++) {
             double origCost=it->second*0.5;
             pInstance->sncTDStructure[it->first]=origCost+wi[firstIndexInWiLifted+counter];
             counter++;
@@ -391,7 +420,7 @@ double LdpProblem::topDownMethod(size_t centralNodeID,double* wi,size_t* y){
     size_t bestSolutionIndex=nodeNotActive;
     size_t bestSolutionID=std::numeric_limits<size_t>::max();
 
-    double nodeCost=pInstance->getVertexScore(centralNodeID)+wi[getIndexInWINode(centralNodeID)];
+    double nodeCost=0.5*pInstance->getVertexScore(centralNodeID)+wi[getIndexInWINode(centralNodeID)];
     std::vector<double> solutionCosts(nodeNotActive+1);
     solutionCosts[nodeNotActive]=0;
     size_t counter=0;
@@ -422,6 +451,34 @@ double LdpProblem::topDownMethod(size_t centralNodeID,double* wi,size_t* y){
         counter++;
     }
 
+    //TODO this whole if else block in debug mode
+    double controlCost=0;
+    if(debugOutputs) std::cout<<"LB "<<centralNodeID<<",is out: "<<isOutFlow<<std::endl;
+    if(bestSolutionIndex==nodeNotActive){
+        if(debugOutputs) std::cout<<"inactive "<<std::endl;
+    }
+    else{
+        size_t bestBaseID=0;
+
+
+        double cost=0;
+        controlCost=nodeCost;
+        if(!isOutFlow){
+            bestBaseID=baseGraph.getBackwardEdgeVertex(centralNodeID,bestSolutionIndex);
+            cost=baseGraph.getBackwardEdgeCost(centralNodeID,bestSolutionIndex);
+            if(bestBaseID<numberOfInnerNodes) cost*=0.5;
+
+        }
+        else{
+            bestBaseID=baseGraph.getForwardEdgeVertex(centralNodeID,bestSolutionIndex);
+            cost=baseGraph.getForwardEdgeCost(centralNodeID,bestSolutionIndex);
+            if(bestBaseID<numberOfInnerNodes) cost*=0.5;
+        }
+        controlCost+=cost;
+        controlCost+=wi[firstBaseIndexInW+bestSolutionIndex];
+        if(debugOutputs) std::cout<<"active index "<<bestSolutionIndex<<", ID "<<bestBaseID<<", cost "<<cost<<", wi "<<wi[firstBaseIndexInW+bestSolutionIndex]<<", node cost: "<<nodeCost<<std::endl;
+    }
+
     std::vector<size_t> optLiftedIndices;
     if(bestSolutionIndex!=nodeNotActive){
         //            assert(bestSolutionID<numberOfNodes);
@@ -429,7 +486,20 @@ double LdpProblem::topDownMethod(size_t centralNodeID,double* wi,size_t* y){
             if((isOutFlow&&pInstance->existLiftedEdge(centralNodeID,bestSolutionID))||(!isOutFlow&&pInstance->existLiftedEdge(bestSolutionID,centralNodeID))){
                 size_t liftedIndex=nodeIDToIndex[centralNodeID][bestSolutionID];
                 optLiftedIndices.push_back(liftedIndex);
+                double liftedCost=0;
+
+                if(isOutFlow){
+                    liftedCost=liftedGraph.getForwardEdgeCost(centralNodeID,liftedIndex);
+                }
+                else{
+                    liftedCost=liftedGraph.getBackwardEdgeCost(centralNodeID,liftedIndex);
+                }
+                controlCost+=0.5*liftedCost;
+                controlCost+=wi[firstIndexInWiLifted+liftedIndex];
+                if(debugOutputs) std::cout<<"active lifted index "<<liftedIndex<<", ID "<<bestSolutionID<<", cost "<<0.5*liftedCost<<"wi "<<wi[firstIndexInWiLifted+liftedIndex]<<std::endl;
+
             }
+
             bestSolutionID=pInstance->sncNeighborStructure[bestSolutionID];
         }
     }
@@ -441,17 +511,22 @@ double LdpProblem::topDownMethod(size_t centralNodeID,double* wi,size_t* y){
     size_t yIndex=getIndexInYBase(centralNodeID);
     y[yIndex]=bestSolutionIndex;
 
+
     assert(optLiftedIndices.size()<maxTimeGap);
     size_t j = 0;
     for (; j < optLiftedIndices.size(); ++j) {
         size_t liftedIndex=optLiftedIndices[j];
         y[yIndex+j+1]=liftedIndex;
 
+
     }
     for(;j<maxTimeGap;j++){
         y[yIndex+j+1]=numberOfInnerNodes;
     }
 
+
+    assert(std::abs(controlCost-bestSolutionValue)<0.000001);
+    if(debugOutputs) std::cout<<"returning value "<<bestSolutionValue<<std::endl;
     return bestSolutionValue;
     //        myStr.optBaseIndex=bestSolutionIndex;
     //        myStr.optValue=bestSolutionValue;
@@ -537,12 +612,23 @@ double minInOutFlowLDP(double* wi, FWMAP::YPtr _y, FWMAP::TermData term_data) //
   LdpProblem* ldpProblem = (LdpProblem*) term_data;
   size_t* y = (size_t*) _y;
   memset(y, 0, ldpProblem->getYLength()*sizeof(size_t));
+  //std::vector<double> zeroLambda(ldpProblem->getXLength());
+
+  if(ldpProblem->debugOutputs){
+      std::cout<<"display wi"<<std::endl;
+      for (int i = 0; i < ldpProblem->getXLength(); ++i) {
+          std::cout<<i<<":"<<wi[i]<<", ";
+      }
+      std::cout<<std::endl;
+  }
   double optValue=0;
   for (size_t i = 0; i < ldpProblem->getNumberOfNodes(); ++i) {
       optValue+=ldpProblem->topDownMethod(i,wi,y);
+     // optValue+=ldpProblem->topDownMethod(i,zeroLambda.data(),y);
 
   }
 
+  std::cout<<"my opt value, is out "<<ldpProblem->getIsOutFlow()<<", value "<<optValue<<std::endl;
 
   return optValue;
 }
