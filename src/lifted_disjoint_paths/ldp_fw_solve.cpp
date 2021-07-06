@@ -61,7 +61,7 @@ int main(int argc, char** argv)
 
   s.init();
   double cost=0;
-  for(size_t i=0; i<50; ++i) {
+  for(size_t i=0; i<100; ++i) {
     cost = s.do_descent_step();
     std::cout<<std::endl;
     std::cout<<"cost in "<<i<<"th step "<<cost<<std::endl;

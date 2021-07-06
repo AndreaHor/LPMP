@@ -144,6 +144,7 @@ double LdpProblem::dotProduct(double* wi,size_t* y) const{
     const LdpDirectedGraph& liftedGraph=pInstance->getMyGraphLifted();
     double product=0;
 
+    if(debugOutputs) std::cout<<"dot product, is out "<<isOutFlow<<std::endl;
     for (size_t i = 0; i < numberOfInnerNodes; ++i) {
         size_t indexInYBase=getIndexInYBase(i);
         size_t baseEdgeIndex=y[indexInYBase];
@@ -153,14 +154,16 @@ double LdpProblem::dotProduct(double* wi,size_t* y) const{
         size_t firstLiftedIndexInX=getIndexInWILifted(i);
         size_t numberOfLifted=liftedGraph.getNumberOfEdgesFromVertex(i);
         if(!isOutFlow) numberOfLifted=liftedGraph.getNumberOfEdgesToVertex(i);
+        if(debugOutputs) std::cout<<"node "<<i<<" ";
         if(baseEdgeIndex<numberOfBase){//active node
 
             product+=wi[i];
             assert(firstBaseIndexInX+baseEdgeIndex<xLength);
 
             product+=wi[firstBaseIndexInX+baseEdgeIndex];
+            if(debugOutputs) std::cout<<"active edge index "<<baseEdgeIndex<<", node cost "<<wi[i]<<", edge cost "<<wi[firstBaseIndexInX+baseEdgeIndex]<<std::endl;
 
-            if(firstBaseIndexInX<xLength){
+            if(firstLiftedIndexInX<xLength){
 
                 size_t indexInYLifted=getIndexInYLifted(i);
                 size_t optLiftedCounter=0;
@@ -172,6 +175,8 @@ double LdpProblem::dotProduct(double* wi,size_t* y) const{
                     product+=wi[firstLiftedIndexInX+nextOptLiftedIndex];
                     optLiftedCounter++;
 
+                    if(debugOutputs) std::cout<<"active lifted index "<<nextOptLiftedIndex<<", cost "<<wi[firstLiftedIndexInX+nextOptLiftedIndex]<<std::endl;
+
                     if(optLiftedCounter<maxTimeGap){
                         nextOptLiftedIndex=y[indexInYLifted+optLiftedCounter];
                     }
@@ -180,7 +185,9 @@ double LdpProblem::dotProduct(double* wi,size_t* y) const{
                 }
             }
         }
+        else if(debugOutputs) std::cout<<"inactive"<<std::endl;
     }
+    if(debugOutputs) std::cout<<"Dot product value "<<product<<std::endl;
     return product;
 
 }
