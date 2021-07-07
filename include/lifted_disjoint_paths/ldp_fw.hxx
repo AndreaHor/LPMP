@@ -9,6 +9,7 @@
 #include <cmath>
 #include <vector>
 #include "ldp_instance.hxx"
+#include <algorithm>
 
 namespace LPMP{
 

@@ -618,7 +618,7 @@ double minInOutFlowLDP(double* wi, FWMAP::YPtr _y, FWMAP::TermData term_data) //
 {
   LdpProblem* ldpProblem = (LdpProblem*) term_data;
   size_t* y = (size_t*) _y;
-  memset(y, 0, ldpProblem->getYLength()*sizeof(size_t));
+  std::fill(y,y+ldpProblem->getYLength(),0);
   //std::vector<double> zeroLambda(ldpProblem->getXLength());
 
   if(ldpProblem->debugOutputs){
@@ -631,11 +631,13 @@ double minInOutFlowLDP(double* wi, FWMAP::YPtr _y, FWMAP::TermData term_data) //
   double optValue=0;
   for (size_t i = 0; i < ldpProblem->getNumberOfNodes(); ++i) {
       optValue+=ldpProblem->topDownMethod(i,wi,y);
+
      // optValue+=ldpProblem->topDownMethod(i,zeroLambda.data(),y);
 
   }
+  optValue-=dotProductLDP(wi,_y,term_data);
 
-  std::cout<<"my opt value, is out "<<ldpProblem->getIsOutFlow()<<", value "<<optValue<<std::endl;
+  if(ldpProblem->debugOutputs)std::cout<<"my opt value, is out "<<ldpProblem->getIsOutFlow()<<", value "<<optValue<<std::endl;
 
   return optValue;
 }

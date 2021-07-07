@@ -16,10 +16,16 @@ int main(int argc, char** argv)
 
     TCLAP::ValueArg<std::string> inputFileArg_("i","inputFile","file from which to read problem instance",true,"","file name",cmd_);
     TCLAP::ValueArg<std::string> outputFileArg_("o","outputFile","file to save result",true,"","file name",cmd_);
+    TCLAP::ValueArg<double> cParameterArg_("c","parameterC","parameter c for the method",false,1.0,"c parameter",cmd_);
+      TCLAP::ValueArg<size_t> numberOfIterationsArg_("","iter","number of iterations",false,100,"number of iterations",cmd_);
+
 
     cmd_.parse(argc,argv);
     std::string inputFileName = inputFileArg_.getValue();
     std::string outputFileName = outputFileArg_.getValue();
+    double cValue=cParameterArg_.getValue();
+    size_t numberOfIterations=numberOfIterationsArg_.getValue();
+
 
     //ProblemConstructorRoundingSolver<Solver<LP<lifted_disjoint_paths_FMC>,StandardTighteningVisitor>> solver(argc,argv);
     //I need a way how to obtain the command line arguments without this constructor
@@ -51,17 +57,16 @@ int main(int argc, char** argv)
 
     FWMAP s (globalXLength, 2, minInOutFlowLDP, copyYtoXLDP, dotProductLDP);//int d, int n, MaxFn max_fn, CopyFn copy_fn, DotProductFn dot_product_fn;
 
-//TODO mapping!
-  //std::array<int,2> mapping = {0,1}; //TODO map in variables to out variables
 
-  //mapping should map variables of problem In to variables of problem Out
+
   //TODO: check the sizes of x and y of both problems, they should be the same.
   s.SetTerm(0, &ldpProblemIn, ldpProblemIn.getXLength(), mappingDataIn, ldpProblemIn.getYLength()*sizeof(size_t));
   s.SetTerm(1, &ldpProblemOut, ldpProblemOut.getXLength(), mappingDataOut, ldpProblemOut.getYLength()*sizeof(size_t));
 
+  s.options.c=cValue;  //0.01 good for 14-sdp subset
   s.init();
   double cost=0;
-  for(size_t i=0; i<100; ++i) {
+  for(size_t i=0; i<numberOfIterations; ++i) {
     cost = s.do_descent_step();
     std::cout<<std::endl;
     std::cout<<"cost in "<<i<<"th step "<<cost<<std::endl;
