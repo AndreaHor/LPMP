@@ -161,7 +161,7 @@ LdpInstance::LdpInstance(LdpParameters<>& configParameters,LdpBatchProcess& BP):
 
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 
-     parameters.getControlOutput() << "Time of instance constructor = " << std::chrono::duration_cast<std::chrono::seconds> (end - begin).count() << " seconds" << std::endl;
+    parameters.getControlOutput() << "Time of instance constructor = " << std::chrono::duration_cast<std::chrono::seconds> (end - begin).count() << " seconds" << std::endl;
     const std::chrono::steady_clock::time_point& bpBegin=BP.getContructorBegin();
     parameters.getControlOutput() << "Time of instance constructor and batch process = " << std::chrono::duration_cast<std::chrono::seconds> (end - bpBegin).count() << " seconds" << std::endl;
     parameters.writeControlOutput();

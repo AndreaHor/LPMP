@@ -38,6 +38,8 @@ target_link_libraries(lifted_disjoint_paths_text_input ldp_instance ldp_paths_ex
 add_executable(lifted_disjoint_paths_fw ldp_fw_solve.cpp)
 target_link_libraries(lifted_disjoint_paths_fw ldp_instance ldp_interval_connection ldp_directed_graph ldp_batch_process ldp_fw LPMP FW-MAP pybind11::module)
 
+add_executable(output_mc_from_ldp output_mc_from_ldp.cxx)
+target_link_libraries(output_mc_from_ldp ldp_directed_graph LPMP pybind11::module)
 
 
 pybind11_add_module(ldpMessagePassingPy ldp_python.cxx)

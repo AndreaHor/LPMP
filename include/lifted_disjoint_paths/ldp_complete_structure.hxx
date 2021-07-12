@@ -116,6 +116,8 @@ public:
     }
 
 
+
+
       //  andres::graph::Digraph<> completeGraph;
      //   std::vector<double> completeScore; //TODO make local variable
         std::vector<double> verticesScore;

@@ -1223,6 +1223,7 @@ void lifted_disjoint_paths_constructor<FACTOR_MESSAGE_CONNECTION, SINGLE_NODE_CU
             WritePrimal(solution);
 
             file << solution.str();
+            file.close();
         }
 
         clusteringValue=pInstance->evaluateClustering(currentPrimalLabels);
