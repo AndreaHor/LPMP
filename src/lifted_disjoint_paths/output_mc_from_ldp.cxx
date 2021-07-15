@@ -8,9 +8,6 @@ int main(int argc, char** argv)
 {
 
 
-    std::cout<<"start"<<std::endl;
-    std::cout<<"start 2"<<std::endl;
-
     TCLAP::CmdLine cmd_(std::string("Command line options for transforming LDP to MC"), ' ', "0.0.1");
 
     TCLAP::ValueArg<std::string> inputFileArg_("i","inputFile","file from which to read problem instance",true,"","file name",cmd_);
@@ -52,7 +49,7 @@ int main(int argc, char** argv)
         size_t groupIndex=vg.getGroupIndex(i);
         const std::vector<size_t>& groupVertices=vg.getGroupVertices(groupIndex);
         for(auto& v:groupVertices){
-            if(v!=i){
+            if(v>i){
                 file<<i<<separator<<v<<withinFramePenalty<<"\n";
             }
         }
